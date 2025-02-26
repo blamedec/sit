@@ -1,11 +1,9 @@
 // src/app/[city]/page.jsx
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import CityHero from '@/components/city/CityHero';
-import PlaceGrid from '@/components/places/PlaceGrid';
-import SearchBarWrapper from '@/components/search/SearchBarWrapper';
-import FilterTagsWrapper from '@/components/search/FilterTagsWrapper';
-import { SearchProvider } from '@/context/SearchContext';
 import { getPlacesByCity } from '@/lib/airtable';
+import CityContent from './CityContent';
 
 // Define valid cities
 const VALID_CITIES = ['london', 'tokyo', 'paris', 'madrid', 'leeds', 'new-york'];
@@ -28,7 +26,7 @@ export function generateMetadata({ params }) {
   };
 }
 
-// Use a Server Component to load the data
+// Main server component
 export default async function CityPage({ params }) {
   // Format and validate the city
   const cityStr = String(params?.city || '');
@@ -74,63 +72,30 @@ export default async function CityPage({ params }) {
   console.log(`EAT places: ${eatPlaces.length}, SEE places: ${seePlaces.length}, DO places: ${doPlaces.length}`);
   
   return (
-    <SearchProvider>
-      <div className="space-y-10">
-        <CityHero city={formattedCity} />
-        
-        {error ? (
-          <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-center">
-            <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Error Loading City Data</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
-              We're having trouble loading data for {formattedCity}. Please try again later.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {process.env.NODE_ENV === 'development' ? `Error details: ${error}` : null}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="sticky top-20 z-10 bg-white dark:bg-gray-900 py-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <SearchBarWrapper />
-                <FilterTagsWrapper />
-              </div>
-            </div>
-            
-            {places.length === 0 ? (
-              <div className="p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-center">
-                <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">No Places Found</h2>
-                <p className="text-gray-700 dark:text-gray-300">
-                  We don't have any places listed for {formattedCity} yet. Check back soon!
-                </p>
-              </div>
-            ) : (
-              <>
-                {eatPlaces.length > 0 && (
-                  <section id="eat" className="space-y-6">
-                    <h2 className="text-4xl font-bold tracking-tight">EAT</h2>
-                    <PlaceGrid places={eatPlaces} />
-                  </section>
-                )}
-                
-                {seePlaces.length > 0 && (
-                  <section id="see" className="space-y-6">
-                    <h2 className="text-4xl font-bold tracking-tight">SEE</h2>
-                    <PlaceGrid places={seePlaces} />
-                  </section>
-                )}
-                
-                {doPlaces.length > 0 && (
-                  <section id="do" className="space-y-6">
-                    <h2 className="text-4xl font-bold tracking-tight">DO</h2>
-                    <PlaceGrid places={doPlaces} />
-                  </section>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </SearchProvider>
+    <div className="space-y-10">
+      <CityHero city={formattedCity} />
+      
+      {error ? (
+        <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 text-center">
+          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Error Loading City Data</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">
+            We're having trouble loading data for {formattedCity}. Please try again later.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {process.env.NODE_ENV === 'development' ? `Error details: ${error}` : null}
+          </p>
+        </div>
+      ) : (
+        <Suspense fallback={<div className="p-6 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse h-96"></div>}>
+          <CityContent 
+            places={places} 
+            eatPlaces={eatPlaces} 
+            seePlaces={seePlaces} 
+            doPlaces={doPlaces} 
+            formattedCity={formattedCity} 
+          />
+        </Suspense>
+      )}
+    </div>
   );
 }

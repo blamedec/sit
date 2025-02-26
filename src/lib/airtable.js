@@ -14,14 +14,13 @@ const AIRTABLE_PLACES_TABLE = 'Places';
 // Check if Airtable is configured
 const isAirtableConfigured = !USE_MOCK_DATA && AIRTABLE_API_KEY && AIRTABLE_BASE_ID;
 
-// Fetch options for Airtable API requests
+// Fetch options for Airtable API requests - use revalidate for static generation
 const fetchOptions = {
   method: 'GET',
   headers: {
     'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
     'Content-Type': 'application/json',
   },
-  // Set a cache revalidation period for static generation
   next: { revalidate: 3600 }, // Revalidate every hour
 };
 

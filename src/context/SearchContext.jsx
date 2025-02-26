@@ -7,17 +7,37 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 // Create context
 const SearchContext = createContext();
 
+// Create a ClientOnly wrapper component for the search provider
 export function SearchProvider({ children }) {
+  return (
+    <ClientOnlySearchProvider>
+      {children}
+    </ClientOnlySearchProvider>
+  );
+}
+
+// This component will only render on the client side
+function ClientOnlySearchProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  // Initialize state from URL parameters
-  const [searchTerm, setSearchTermState] = useState(
-    searchParams.get('q') || ''
-  );
+  // Initialize state from URL parameters - safely with null checks
+  const [searchTerm, setSearchTermState] = useState(() => {
+    // Only access searchParams on the client
+    if (typeof window === 'undefined') return '';
+    return searchParams?.get('q') || '';
+  });
+  
   const [activeFilters, setActiveFilters] = useState(() => {
+    // Don't run this logic on the server
+    if (typeof window === 'undefined') return [];
+    
     const filters = [];
+    
+    // Safely access searchParams
+    if (!searchParams) return filters;
+    
     // Parse category filters
     const category = searchParams.get('category');
     if (category) {
@@ -44,9 +64,44 @@ export function SearchProvider({ children }) {
   
   const [searchResults, setSearchResults] = useState([]);
   
+  // Initialize params once the component is mounted
+  useEffect(() => {
+    // This runs only on the client side
+    if (!searchParams) return;
+    
+    setSearchTermState(searchParams.get('q') || '');
+    
+    const filters = [];
+    
+    // Parse category filters
+    const category = searchParams.get('category');
+    if (category) {
+      category.split(',').forEach(value => {
+        filters.push({ type: 'category', value });
+      });
+    }
+    
+    // Parse tag filters
+    const tags = searchParams.get('tags');
+    if (tags) {
+      tags.split(',').forEach(value => {
+        filters.push({ type: 'tag', value });
+      });
+    }
+    
+    // Parse mustVisit filter
+    if (searchParams.get('mustVisit') === 'true') {
+      filters.push({ type: 'mustVisit', value: true });
+    }
+    
+    setActiveFilters(filters);
+  }, [searchParams]);
+  
   // Update URL when filters or search term change
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
+    if (!searchParams || !router) return;
+    
+    const params = new URLSearchParams(searchParams.toString());
     
     // Update search term parameter
     if (searchTerm) {
