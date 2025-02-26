@@ -2,26 +2,36 @@
 import { notFound } from 'next/navigation';
 import CityHero from '@/components/city/CityHero';
 import PlaceGrid from '@/components/places/PlaceGrid';
-import SearchBar from '@/components/search/SearchBar';
-import FilterTags from '@/components/search/FilterTags';
+import SearchBarWrapper from '@/components/search/SearchBarWrapper';
+import FilterTagsWrapper from '@/components/search/FilterTagsWrapper';
 import { SearchProvider } from '@/context/SearchContext';
 import { getPlacesByCity } from '@/lib/airtable';
 
 // Define valid cities
 const VALID_CITIES = ['london', 'tokyo', 'paris', 'madrid', 'leeds', 'new-york'];
 
-// This pattern completely avoids using params.city in a way that Next.js 15 has issues with
-export default function CityPage({ params }) {
-  // We don't destructure or access params.city directly in the component definition
+// This function allows us to statically generate the city pages
+export function generateStaticParams() {
+  return VALID_CITIES.map(city => ({ city }));
+}
+
+// Metadata without using params.city directly
+export function generateMetadata({ params }) {
+  const citySlug = params?.city || '';
+  const formattedCity = String(citySlug).split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
   
-  // Define a client component that will render the actual content
-  return <CityPageContent citySlug={params?.city} />;
+  return {
+    title: `${formattedCity} - SIT City Guide | Places to Eat, See, and Do`,
+    description: `Curated recommendations for the best places to eat, things to see, and activities to do in ${formattedCity}.`,
+  };
 }
 
 // Use a Server Component to load the data
-async function CityPageContent({ citySlug }) {
+export default async function CityPage({ params }) {
   // Format and validate the city
-  const cityStr = String(citySlug || '');
+  const cityStr = String(params?.city || '');
   
   if (!VALID_CITIES.includes(cityStr)) {
     notFound();
@@ -82,8 +92,8 @@ async function CityPageContent({ citySlug }) {
           <>
             <div className="sticky top-20 z-10 bg-white dark:bg-gray-900 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <SearchBar />
-                <FilterTags />
+                <SearchBarWrapper />
+                <FilterTagsWrapper />
               </div>
             </div>
             
@@ -123,22 +133,4 @@ async function CityPageContent({ citySlug }) {
       </div>
     </SearchProvider>
   );
-}
-
-// Generate static paths for all cities - use a static pattern to avoid params.city issues
-export function generateStaticParams() {
-  return VALID_CITIES.map(city => ({ city }));
-}
-
-// Metadata without using params.city directly
-export function generateMetadata({ params }) {
-  const citySlug = params?.city || '';
-  const formattedCity = String(citySlug).split('-').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
-  
-  return {
-    title: `${formattedCity} - SIT City Guide | Places to Eat, See, and Do`,
-    description: `Curated recommendations for the best places to eat, things to see, and activities to do in ${formattedCity}.`,
-  };
 }

@@ -21,7 +21,8 @@ const fetchOptions = {
     'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
     'Content-Type': 'application/json',
   },
-  cache: 'no-store', // Don't cache API responses in production
+  // Set a cache revalidation period for static generation
+  next: { revalidate: 3600 }, // Revalidate every hour
 };
 
 // Log configuration information for debugging
