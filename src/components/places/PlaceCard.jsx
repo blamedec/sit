@@ -119,6 +119,12 @@ export default function PlaceCard({ place }) {
               {tag}
             </span>
           ))}
+          {/* NEW CODE: Show count of remaining tags */}
+          {processedTags.length > 3 && (
+            <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+              +{processedTags.length - 3} more
+            </span>
+          )}
         </div>
         
         {/* Description */}
@@ -158,9 +164,13 @@ export default function PlaceCard({ place }) {
             </Link>
           )}
           
-          {location && (
+          {/* NEW CODE: Use address for map link if location is not available */}
+          {(location || address) && (
             <Link 
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.lat)},${encodeURIComponent(location.lng)}`}
+              href={location 
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.lat)},${encodeURIComponent(location.lng)}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+              }
               target="_blank" 
               rel="noopener noreferrer"
               className="text-green-600 dark:text-green-400 flex items-center text-sm hover:underline"
