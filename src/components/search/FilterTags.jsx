@@ -16,8 +16,8 @@ export default function FilterTags({ allPlaces = [] }) {
   
   // Define common tag IDs that should always appear (if they exist in the data)
   const PINNED_COMMON_TAG_IDS = [
-    'michelin-starred', 'old-locals', 'hidden-gem', 'listening-bar',
-    'must-book', 'coffee'
+    'michelin-starred', 'rooftop', 'hidden-gem', 'family-friendly',
+    'vegetarian', 'outdoor-seating', 'historic', 'modern', 'romantic'
   ];
   
   // Category filters
@@ -30,6 +30,8 @@ export default function FilterTags({ allPlaces = [] }) {
   // Extract and categorize tags from places data
   useEffect(() => {
     if (allPlaces && allPlaces.length > 0) {
+      console.log('Processing tags for', allPlaces.length, 'places');
+      
       // Extract all unique tags from places
       const tagCounts = {};
       

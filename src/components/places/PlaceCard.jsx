@@ -164,7 +164,7 @@ export default function PlaceCard({ place }) {
             </Link>
           )}
           
-          {/* NEW CODE: Use address for map link if location is not available */}
+          {/* UPDATED: Use address for map link if location is not available */}
           {(location || address) && (
             <Link 
               href={location 
